@@ -1,0 +1,7 @@
+{"timestamp":"2026-04-26T01:25:07Z","type":"session_meta","payload":{"id":"example"}}
+{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Create a hello world script"}]}}
+{"type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Sure. Here is a simple hello world script."}]}}
+{"role":"system","content":"You are a coding assistant."}
+{"debug":true}
+{"role":"assistant","content":""}
+not valid json

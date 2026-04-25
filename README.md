@@ -1,100 +1,74 @@
 # jsonl-to-chatmljson
 
-Convert Codex session `.jsonl` files into ChatML-style JSON so they can be used with tools such as OpenCode.
+Convert JSONL chat logs to strict OpenCode-compatible ChatML JSON.
 
-## Why this exists
+## Output contract
 
-Codex stores session history as `.jsonl` files, often under a path like:
+This tool always writes a single JSON object:
 
-`C:\Users\YourName\.codex\sessions\2026\04\26\rollout-....jsonl`
+```json
+{
+  "messages": [
+    {"role": "system", "content": "..."},
+    {"role": "user", "content": "..."},
+    {"role": "assistant", "content": "..."}
+  ]
+}
+```
 
-This project converts those JSONL records into a simpler ChatML JSON structure:
+Rules enforced by converter:
 
-[
-  {
-    "source": "path/to/session.jsonl",
-    "messages": [
-      {
-        "role": "user",
-        "content": "..."
-      },
-      {
-        "role": "assistant",
-        "content": "..."
-      }
-    ]
-  }
-]
-
-## Features
-
-- Converts one `.jsonl` file.
-- Converts a whole directory of `.jsonl` files.
-- Supports Codex-style session events.
-- Supports common chat dataset formats:
-  - `messages`
-  - `prompt` / `completion`
-  - `prompt` / `response`
-  - `instruction` / `output`
-  - `question` / `answer`
-- Can add a system prompt to every conversation.
-- Can optionally preserve detected tool outputs.
+- role must be one of `system`, `user`, `assistant`
+- content must resolve to non-empty string
+- malformed lines are skipped with warning, or fail in `--strict` mode
+- metadata fields are dropped
+- message order is preserved
+- if system cleanup is enabled, all system messages are moved to top
+- multiple files are flattened into one `messages` array
 
 ## Requirements
 
-- Python 3.8 or newer
+- Python 3.8+
 
-No third-party Python packages are required.
+## CLI
 
-## Usage
+```bash
+python -m jsonl2chatml input.jsonl -o output.json
+```
 
-From this repo folder:
+Compatible legacy entrypoint:
 
-`python jsonl_to_chatmljson.py INPUT OUTPUT`
+```bash
+python jsonl_to_chatmljson.py input.jsonl -o output.json
+```
 
-### Convert one Codex session file
+### Options
 
-PowerShell example:
+- `--strict` fail on malformed JSON or skipped non-message record
+- `--no-system-cleanup` keep original position of system messages
+- `--pretty` pretty-print JSON output
+- `--markdown PATH` export transcript as Markdown
 
-`python .\jsonl_to_chatmljson.py "C:\Users\Vijender Joshi\.codex\sessions\2026\04\26\rollout-2026-04-26T01-25-07-019dc635-ca93-79a0-b1eb-cc0bc1e9cd49.jsonl" ".\chatml-output.json"`
+### Multiple input files
 
-### Convert a whole Codex sessions directory
+```bash
+python -m jsonl2chatml a.jsonl b.jsonl -o merged.json
+```
 
-`python .\jsonl_to_chatmljson.py "C:\Users\Vijender Joshi\.codex\sessions" ".\all-codex-sessions-chatml.json"`
+### Input directory
 
-### Add a system prompt
+```bash
+python -m jsonl2chatml C:\Users\YourName\.codex\sessions -o merged.json
+```
 
-`python .\jsonl_to_chatmljson.py input.jsonl output.json --system "You are a helpful assistant."`
+## Examples
 
-### Include tool outputs
+- Input: `examples/input/sample_mixed.jsonl`
+- Output JSON: `examples/output/sample_output.json`
+- Output Markdown: `examples/output/sample_transcript.md`
 
-By default, the converter focuses on user and assistant text. To include detected tool/function outputs:
+## Tests
 
-`python .\jsonl_to_chatmljson.py input.jsonl output.json --include-tools`
-
-### Output one object instead of an array
-
-If you are converting one file and want:
-
-`{"source": "...", "messages": [...]}`
-
-instead of:
-
-`[{"source": "...", "messages": [...]}]`
-
-run:
-
-`python .\jsonl_to_chatmljson.py input.jsonl output.json --object`
-
-### Compact output
-
-`python .\jsonl_to_chatmljson.py input.jsonl output.json --compact`
-
-## Example input
-
-A Codex-style JSONL file may contain records like:
-
-```examples/codex-session-sample.jsonl#L1-3
-{"timestamp":"2026-04-26T01:25:07Z","type":"session_meta","payload":{"id":"example"}}
-{"timestamp":"2026-04-26T01:25:08Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Create a hello world script"}]}}
-{"timestamp":"2026-04-26T01:25:09Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Sure. Here is a simple hello world script."}]}}
+```bash
+python -m unittest discover -s tests -p "test_*.py" -v
+```

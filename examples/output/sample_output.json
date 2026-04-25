@@ -1,0 +1,16 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a coding assistant."
+    },
+    {
+      "role": "user",
+      "content": "Create a hello world script"
+    },
+    {
+      "role": "assistant",
+      "content": "Sure. Here is a simple hello world script."
+    }
+  ]
+}
